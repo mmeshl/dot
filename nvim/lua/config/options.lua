@@ -1,36 +1,40 @@
-vim.g.mapleader      = ' '
-vim.g.maplocalleader = ' '
+local g, o = vim.g, vim.opt
 
-vim.opt.number         = true
-vim.opt.relativenumber = true
+g.mapleader      = ' '
+g.maplocalleader = ' '
 
-vim.opt.signcolumn = 'yes'
+o.number         = true
+o.relativenumber = true
+o.mouse          = 'a'
+o.undofile       = true
+o.ignorecase     = true
+o.smartcase      = true
+o.incsearch      = true
+o.hlsearch       = true
+o.signcolumn     = 'yes:1'
+o.updatetime     = 250
+o.timeoutlen     = 300
+o.splitright     = true
+o.splitbelow     = true
+o.inccommand     = 'split'
+o.cursorline     = true
+o.scrolloff      = 10
+o.sidescrolloff  = 10
+o.confirm        = true
+o.shiftwidth     = 4
+o.softtabstop    = 4
+o.expandtab      = true
+o.termguicolors  = true
+o.wrap           = false
+o.colorcolumn    = '100'
+o.showmode       = false
+o.cmdheight      = 1
+o.autoread       = true
+o.autowrite      = false
+o.selection      = 'inclusive'
+o.modifiable     = true
+o.encoding       = 'utf-8'
+o.fillchars      = { eob = ' ', fold = ' ' }
 
-vim.opt.updatetime = 250
-vim.opt.timeoutlen = 300
-
-vim.opt.splitright = true
-vim.opt.splitbelow = true
-
-vim.opt.inccommand = 'split'
-
-vim.opt.cursorline = true
-
-vim.opt.scrolloff = 10
-
-vim.opt.shiftwidth  = 4
-vim.opt.softtabstop = 4
-vim.opt.expandtab   = true
-
-vim.opt.breakindent = true
-
-vim.opt.undofile = true
-
-vim.opt.ignorecase = true
-vim.opt.smartcase  = true
-
-vim.opt.showmode = false
-
-vim.opt.termguicolors = true
-
-vim.opt.colorcolumn = '100'
+o.iskeyword:append '-'
+o.shortmess:append 'I'

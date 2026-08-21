@@ -1,5 +1,0 @@
-vim.keymap.set({ 'n', 'v' }, 'j', 'gj', { buffer = true })
-vim.keymap.set({ 'n', 'v' }, 'k', 'gk', { buffer = true })
-vim.keymap.set({ 'n', 'v' }, '^', 'g^', { buffer = true })
-vim.keymap.set({ 'n', 'v' }, '$', 'g$', { buffer = true })
-vim.keymap.set({ 'n', 'v' }, '0', 'g0', { buffer = true })
