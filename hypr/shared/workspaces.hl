@@ -1,7 +1,0 @@
-workspace = $mainWorkspace,         persistent:true,  defaultName:main
-workspace = $mediaWorkspace,        persistent:true,  defaultName:media
-workspace = $gameLauncherWorkspace, persistent:true,  defaultName:gameLauncher
-
-workspace = $extraWorkspace,  defaultName:extra
-workspace = $gameWorkspace,   defaultName:game, border:false, shadow:false, rounding:false, decorate:false
-workspace = $codingWorkspace, defaultName:code

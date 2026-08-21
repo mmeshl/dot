@@ -1,5 +1,0 @@
-# TODO: remove systemd dependency
-exec-once = systemctl --user start hyprpolkitagent
-
-# open steam 'cause it takes long without network manager
-exec-once = steam

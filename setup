@@ -131,7 +131,6 @@ function linkconfig
             DST=$CONF/nvim
             ;;
         hypr)
-            touch ./hypr/override.hl
             DST=$CONF/hypr
             ;;
         tmux)
@@ -167,24 +166,6 @@ function linkconfigs
     done
 }
 
-function selectpreset
-{
-    local PRESET=$1
-    local PRESET_FILE=./hypr/presets/$PRESET.hl
-
-    if ! [ -f $PRESET_FILE ] ; then
-        echo "Hypr preset '$PRESET' does not exist" >&2
-        return
-    fi
-
-    echo "source = ./presets/$PRESET.hl" > ./hypr/hyprland.conf
-    
-    if [[ $PRESET == excalibur ]] ; then
-        hyprpm add https://github.com/Duckonaut/split-monitor-workspaces
-        hyprpm enable split-monitor-workspaces
-    fi
-}
-
 function getallprogs
 {
     echo zsh kitty nvim hypr tmux starship fonts extras
@@ -211,16 +192,12 @@ case $1 in
             linkconfigs ${@:2}
         fi
         ;;
-    preset)
-        selectpreset $2
-        ;;
     keepcleanhome)
         linkcleanhome
         ;;
     everything)
         $CWD/setup install all
         $CWD/setup link all
-        $CWD/setup preset default
         $CWD/setup keepcleanhome
         ;;
 esac
