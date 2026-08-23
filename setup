@@ -2,58 +2,72 @@
 
 CWD=$(cd -- $(dirname $0) && pwd)
 
-function getdistro
+if [ -r /etc/os-release ]
+then
+    DISTRO=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | xargs)
+else
+    DISTRO=unknown
+fi
+
+for CMD in doas sudo
+do
+    if (command -v $CMD 2>&1 > /dev/null)
+    then
+        SU=$CMD
+    fi
+done
+
+function log
 {
-    [ -r /etc/os-release ]                                     \
-        && awk -F= '/^ID=/ {print $2}' /etc/os-release | xargs \
-        || echo linux
+    local LVL=$1
+    local MSG=$2
+
+    case $1 in
+        info) printf "\x1b[1;34m:: \x1b[39m$MSG\x1b[0m\n"  >&2 ;;
+        warn) printf "\x1b[1;33m:: \x1b[39m$MSG\x1b[0m\n"  >&2 ;;
+        err)  printf "\x1b[1;31m:: \x1b[39m$MSG\x1b[0m\n"  >&2 ;;
+        ask)  printf "\x1b[1;37m:: \x1b[39m$MSG\x1b[0m"    >&2 ;;
+        *)    printf "$MSG\n"                              >&2 ;;
+    esac
 }
 
-function getsucmd
+function checkoverlay
 {
-    for C in sudo doas ; do
-        (command -v $C 2>&1 > /dev/null) \
-            && echo $C && return
-    done
-}
+    if !(eselect repository list -i 2>&1 | grep --quiet "] $1")
+    then
+        log warn "The $1 overlay is not enabled!"
+        log warn "To enable it, run:"
+        log warn "  $SU eselect repository enable $1"
+        log warn "  $SU emaint sync -r $1"
+        echo
+        return 1
+    fi
 
-function getaurhelper
-{
-    for C in paru yay aura ; do
-        (command -v $C 2>&1 > /dev/null) \
-            && echo $C && return
-    done
+    return 0
 }
 
 function getpkgs
 {
-    local DISTRO=$1
-    local PROG=$2
+    local PROG=$1
 
     case "$PROG@$DISTRO" in
         zsh@arch)
-            echo zsh starship zoxide fzf
+            echo zsh zoxide fzf
             ;;
         zsh@gentoo)
-            echo app-shells/{zsh,starship,zoxide,fzf}
-            ;;
-        kitty@arch)
-            echo kitty
-            ;;
-        kitty@gentoo)
-            echo x11-terms/kitty
+            echo app-shells/{zsh,zoxide,fzf}
             ;;
         nvim@arch)
-            echo neovim luarocks
+            echo neovim
             ;;
         nvim@gentoo)
-            echo app-editors/neovim dev-lua/luarocks
+            echo app-editors/neovim
             ;;
         hypr@arch)
-            echo hyprland
+            echo hyprland xdg-desktop-portal-hyprland
             ;;
         hypr@gentoo)
-            echo gui-wm/hyprland
+            checkoverlay hyproverlay && echo gui-wm/hyprland gui-libs/xdg-desktop-portal-hyprland
             ;;
         tmux@arch)
             echo tmux
@@ -61,58 +75,72 @@ function getpkgs
         tmux@gentoo)
             echo app-misc/tmux
             ;;
-        starship@arch)
-            echo starship
-            ;;
-        starship@gentoo)
-            echo app-shells/starship
-            ;;
         fonts@arch)
             echo ttf-jetbrains-mono-nerd ttf-noto-nerd
             ;;
         fonts@gentoo)
-            echo media-fonts/{jetbrains-mono-nerd,noto}
+            echo media-fonts/{jetbrains-mono,symbols-nerd-font,noto}
             ;;
         extras@arch)
-            echo lsd ripgrep fd bat xdg-desktop-portal-hyprland
+            echo lsd ripgrep fd bat
             ;;
         extras@gentoo)
-            echo sys-apps/{lsd,ripgrep,fd,bat} gui-libs/xdg-desktop-portal-hyprland
+            echo sys-apps/{lsd,ripgrep,fd,bat}
             ;;
         *)
-            echo "No package preset for program '$PROG' on $DISTRO" >&2
+            log warn "No package preset for program '$PROG' on $DISTRO"
             ;;
     esac
 }
 
 function installpkgs
 {
-    local DISTRO=$1
-    local PKGS=${@:2}
-    local SU=$(getsucmd)
+    local PKGS=$@
 
     case $DISTRO in
         arch)
-            $(getaurhelper) --needed -S $PKGS
+            $SU pacman --needed --sync $PKGS
             ;;
         gentoo)
-            $SU emerge --ask $PKGS
+            $SU emerge --noreplace --ask --verbose $PKGS
             ;;
         *)
-            echo "Cannot install packages. ($DISTRO is not supported)" >&2
+            log err "Cannot install packages. ($DISTRO is not supported)"
             ;;
     esac
 }
 
 function installprogs
 {
-    local DISTRO=$(getdistro)
+    if [ "$DISTRO" = "gentoo" ] && !(eselect modules list 2>&1 | grep --quiet '^  redpository')
+    then
+        log warn "The eselect 'repository' module is not installed."
+        log warn "It might be needed to enable overlays for certain packages."
+        log warn "Run '$SU emerge --ask --verbose app-select/eselect-repository' to install it."
+        log info "Continuing..."
+        echo
+    fi
 
-    for PROG in $@ ; do
-        PKGS+="$(getpkgs $DISTRO $PROG) "
+    for PROG in $@
+    do
+        PKGS+="$(getpkgs $PROG) "
     done
 
-    [ ${#PKGS} -gt 0 ] && installpkgs $DISTRO $PKGS
+    if (echo $PKGS | grep --quiet '\w')
+    then
+        log info "The following packages will be installed:"
+        for PKG in $PKGS
+        do
+            log info "  $PKG"
+        done
+
+        echo
+        [ "$DISTRO" = "gentoo" ] && log info "Ensure desired USE flags have been set."
+        log ask "Continue? (Control + C to cancel) "
+        read || return 1
+
+        installpkgs $PKGS
+    fi
 }
 
 function linkconfig
@@ -124,9 +152,6 @@ function linkconfig
         zsh)
             DST=$CONF/zsh
             ;;
-        kitty)
-            DST=$CONF/kitty
-            ;;
         nvim)
             DST=$CONF/nvim
             ;;
@@ -135,10 +160,6 @@ function linkconfig
             ;;
         tmux)
             DST=$CONF/tmux
-            ;;
-        starship)
-            SRC=starship.toml
-            DST=$CONF/starship.toml
             ;;
         extras/cleanhome/pythonrc)
             DST=$CONF/python/pythonrc
@@ -151,24 +172,28 @@ function linkconfig
             ;;
     esac
 
-    if ! [ -e $DST ] ; then
+    # TODO: Offer option to backup existing config instead of skipping if it already exists.
+
+    if ! [ -e $DST ]
+    then
         mkdir --parents --verbose $(dirname $DST)
         ln --symbolic --verbose $CWD/$SRC $DST
     else
-        echo "Not linking '$1' to '$DST' because a file already exists"
+        log warn "Not linking '$1' to '$DST' because a file already exists"
     fi
 }
 
 function linkconfigs
 {
-    for PROG in $@ ; do
+    for PROG in $@
+    do
         linkconfig $PROG
     done
 }
 
 function getallprogs
 {
-    echo zsh kitty nvim hypr tmux starship fonts extras
+    echo zsh nvim hypr tmux fonts extras
 }
 
 function linkcleanhome
@@ -177,16 +202,21 @@ function linkcleanhome
     linkconfig extras/cleanhome/npmrc
 }
 
+# TODO: More robust option parsing.
+# TODO: Unlink config from backup.
+
 case $1 in
     install)
-        if [ $2 = all ] ; then
+        if [ $2 = all ] 
+        then
             installprogs $(getallprogs)
         else
             installprogs ${@:2}
         fi
         ;;
     link)
-        if [ $2 = all ] ; then
+        if [ $2 = all ]
+        then
             linkconfigs $(getallprogs)
         else
             linkconfigs ${@:2}

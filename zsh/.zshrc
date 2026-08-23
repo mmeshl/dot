@@ -9,12 +9,11 @@ compdef {g=git,t=tmux}
 
 # configure zvm on source
 ZVM_INIT_MODE=sourcing
+source $(zp load https://github.com/jeffreytse/zsh-vi-mode.git)
 
 source $(zp load https://github.com/Aloxaf/fzf-tab.git)
 source $(zp load https://github.com/zsh-users/zsh-syntax-highlighting.git)
-source $(zp load https://github.com/jeffreytse/zsh-vi-mode.git)
 source $(zp load https://github.com/zsh-users/zsh-autosuggestions.git)
 
-eval "$(starship init zsh)"
 eval "$(zoxide init --cmd=c zsh)"
 eval "$(fzf --zsh)"

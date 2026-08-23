@@ -21,10 +21,7 @@ If you wish to just install or link, you can run:
 
 If you just want to install or link certain programs and their configs, run:
 ```bash
-./setup install # zsh kitty nvim hypr tmux starship fonts extras
+./setup install # zsh nvim hypr tmux fonts extras
 # or
-./setup link # zsh kitty nvim hypr tmux starship fonts extras
+./setup link # zsh nvim hypr tmux fonts extras
 ```
-
-> [!NOTE]
-> Certain programs depend on other programs, so required dependencies will be installed even if you don't specify. (ie. zsh requires starship). If you choose to install and link only zsh, then you will get a default starship prompt.
