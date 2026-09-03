@@ -1,6 +1,6 @@
 # My dotfiles
 
-> [!CAUTION] Important
+> [!NOTE]
 > `./setup install` only works on Arch and Gentoo at the moment.
 
 ## Setup
