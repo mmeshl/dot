@@ -1,0 +1,9 @@
+theme                            = rose-pine
+palette-generate                 = true
+custom-shader                    = shaders/cursor_warp.glsl
+custom-shader-animation          = always
+clipboard-read                   = allow
+clipboard-write                  = allow
+font-family                      = JetBrains Mono
+linux-cgroup                     = never
+window-inherit-working-directory = false

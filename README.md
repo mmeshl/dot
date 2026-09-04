@@ -21,7 +21,7 @@ If you wish to just install or link, you can run:
 
 If you just want to install or link certain programs and their configs, run:
 ```bash
-./setup install # zsh nvim hypr tmux fonts extras
+./setup install # zsh nvim hypr tmux ghostty fonts extras
 # or
-./setup link # zsh nvim hypr tmux fonts extras
+./setup link # zsh nvim hypr tmux ghostty fonts extras
 ```

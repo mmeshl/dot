@@ -26,7 +26,7 @@ function run
     $@ >&2
 }
 
-function defaultsu
+function defaultsucmd
 {
     su -c "$*"
 }
@@ -47,7 +47,7 @@ case $DISTRO in
 esac
 
 # Get the command that will be used to run as root (fallback to su)
-SUCMD=defaultsu
+SUCMD=defaultsucmd
 for CMD in doas sudo
 do
     (command -v $CMD 2>&1 > /dev/null) && SUCMD=$CMD && break
@@ -109,6 +109,12 @@ function getpkgs
         tmux@gentoo)
             echo app-misc/tmux
             ;;
+        ghostty@arch)
+            echo ghostty
+            ;;
+        ghostty@gentoo)
+            echo x11-terms/ghostty
+            ;;
         fonts@arch)
             echo ttf-jetbrains-mono-nerd ttf-noto-nerd
             ;;
@@ -157,13 +163,25 @@ function installprogs
     fi
 }
 
+function getghfile
+{
+    local REPO=$1
+    local FILE=$2
+    local DIR=$3
+    local BRANCH=${4:-main}
+    local URL="https://raw.githubusercontent.com/$REPO/refs/heads/$BRANCH/$FILE"
+
+    log info "Downloading https://github.com/$REPO/$FILE to $DIR"
+    run curl --location --output-dir $DIR --remote-name $URL
+}
+
 # Create a symlink for the provided program's config.
 function linkconfig
 {
     local CONF=${XDG_CONFIG_HOME:-$HOME/.config}
     local SRC=$1
 
-    case $1 in
+    case $SRC in
         zsh)
             DST=$CONF/zsh
             ;;
@@ -175,6 +193,13 @@ function linkconfig
             ;;
         tmux)
             DST=$CONF/tmux
+            ;;
+        ghostty)
+            mkdir ghostty/{themes,shaders}
+            getghfile sahaj-b/ghostty-cursor-shaders cursor_warp.glsl ghostty/shaders
+            getghfile rose-pine/ghostty dist/rose-pine ghostty/themes
+
+            DST=$CONF/ghostty
             ;;
         extras/cleanhome/pythonrc)
             DST=$CONF/python/pythonrc
@@ -191,6 +216,7 @@ function linkconfig
 
     if ! [ -e $DST ]
     then
+        log info "Linking $DST to $CWD/$SRC"
         run mkdir --parents --verbose $(dirname $DST)
         run ln --symbolic --verbose $CWD/$SRC $DST
     else
@@ -209,7 +235,7 @@ function linkconfigs
 
 function getallprogs
 {
-    echo zsh nvim hypr tmux fonts shextras
+    echo zsh nvim hypr tmux ghostty fonts shextras
 }
 
 function linkcleanhome
