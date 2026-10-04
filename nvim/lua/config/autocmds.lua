@@ -1,10 +1,11 @@
 vim.api.nvim_create_autocmd('VimEnter', {
-  desc     = 'Open oil when no arguments are specified',
+  desc     = 'Open Oil when Vim is opened with an unnamed buffer',
   group    = vim.api.nvim_create_augroup('StartupDir', { clear = true }),
   once     = true,
-  callback = function (_)
-    if vim.fn.argc() ~= 0 then return end
-    vim.schedule(vim.cmd.Oil)
+  callback = function (ev)
+    if #vim.api.nvim_buf_get_name(ev.buf) == 0 then
+      vim.schedule(vim.cmd.Oil)
+    end
   end
 })
 
@@ -29,35 +30,20 @@ vim.api.nvim_create_autocmd('PackChanged', {
   callback = function (ev)
     if ev.data.kind ~= 'update' and ev.data.kind ~= 'install' then return end
 
-    if ev.data.spec.name == 'telescope-fzf-native.nvim' then
-      vim.system({ 'make' }, { cwd = ev.data.path })
-    elseif ev.data.spec.name == 'nvim-treesitter' then
-      vim.cmd.TSUpdate()
-    elseif ev.data.spec.name == 'blink.cmp' then
-      vim.system({ 'cargo', 'build', '--release' }, { cwd = ev.data.path })
-    end
+    local fn = ({
+      ['telescope-fzf-native'] = function ()
+        print 'Building telescope-fzf-native...'
+        vim.system({ 'make' }, { cwd = ev.data.path })
+      end,
+      ['nvim-treesitter'] = function ()
+        print 'Updating treesitter parsers...'
+        vim.cmd.TSUpdate()
+      end
+    })[ev.data.spec.name]
+
+    if fn then fn() end
   end
 })
-
-do -- Macro notifications
-  local group = vim.api.nvim_create_augroup('MacroNotify', { clear = true })
-
-  vim.api.nvim_create_autocmd('RecordingEnter', {
-    desc     = 'Notify on macro record start',
-    group    = group,
-    callback = function (_)
-      vim.notify('Started recording macro to register @' .. vim.fn.reg_recording())
-    end
-  })
-
-  vim.api.nvim_create_autocmd('RecordingLeave', {
-    desc     = 'Notify on macro record stop',
-    group    = group,
-    callback = function (_)
-      vim.notify('Stopped recording macro to register @' .. vim.fn.reg_recording())
-    end
-  })
-end
 
 do -- Auto setup treesitter parsers
   local function search_list(list, value)
