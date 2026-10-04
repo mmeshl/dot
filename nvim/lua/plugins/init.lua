@@ -7,6 +7,7 @@ vim.pack.add {
   github 'nvim-telescope/telescope.nvim',
   github 'nvim-treesitter/nvim-treesitter',
   github 'nvim-mini/mini.nvim',
+  github 'saghen/blink.lib',
   github 'saghen/blink.cmp',
   github 'neovim/nvim-lspconfig',
   github 'mason-org/mason.nvim',

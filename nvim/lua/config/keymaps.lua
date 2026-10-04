@@ -121,6 +121,10 @@ do -- Builtin Telescope keymaps
       setlsk(ld 'th', function ()
         vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
       end, '[T]oggle inlay [H]ints')
+
+      setlsk(ld 'ff', function ()
+        vim.lsp.buf.format()
+      end)
     end
   })
 end
